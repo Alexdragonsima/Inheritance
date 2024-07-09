@@ -52,11 +52,16 @@ public:
 	}
 
 	//				methods:
-	virtual void print()const
+	virtual std::ostream& print(std::ostream& os)const
 	{
-		cout << last_name << " " << first_name << " " << age << endl;
+		return os << last_name << " " << first_name << " " << age;
 	}
 };
+
+std::ostream& operator<<(std::ostream& os, const Human& obj)
+{
+	return obj.print(os);
+}
 
 #define STUDENTS_TAKE_PARAMETERS  const std::string& speciality, const std::string& group, double rating, double attendance
 #define STUDENTS_GIVE_PARAMETERS  speciality, group, rating, attendance
@@ -127,10 +132,9 @@ public:
 
 	//					methods
 
-	void print()const override
+	std::ostream& print(std::ostream& os)const override
 	{
-		Human::print();				//всегда можем вызвать основной метод в дочерний
-		cout << speciality << " " << group << " " << rating << " " << attendance << endl;
+		return Human::print(os) <<" "<< speciality << " " << group << " " << rating << " " << attendance << endl;
 	}
 };
 
@@ -174,10 +178,9 @@ public:
 
 	//				methods
 
-	void print()const override
+	std::ostream& print(std::ostream& os)const override
 	{
-		Human::print();
-		cout << speciality << " " << experience << " years" << endl;
+		return Human::print(os)<<" "<< speciality << " " << experience << " years";
 	}
 };
 
@@ -213,14 +216,31 @@ public:
 		cout << "GDestructor:\t" << this << endl;
 	}
 
-	//						methods
+	//						methods-
 
-	void print()const override
+	std::ostream& print(std::ostream& os)const override
 	{
-		Student::print();
-		cout << subject << endl;
+		return Student::print(os)<< subject;
 	}
 };
+
+void print(Human* group[], const int n)
+{
+	for (int i = 0; i < n; i++)
+	{
+		//group[i]->print();
+		cout << *group[i] << endl;
+		cout << delimiter << endl;
+	}
+}
+
+void clear(Human* group[], const int n)
+{
+	for (int i = 0; i < n; i++)
+	{
+		delete group[i];
+	}
+}
 
 //#define INHERITANCE_1
 //#define INHERITANCE_2
@@ -284,14 +304,6 @@ void main()
 		new Student (" Vercetti", "Tommy  ",30, "Thieft","Vice",95,98),
 		new Teacher (" Diaz", "    Ricardo",50, "Weapons distribution",20)
 	};
-
-	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
-	{
-		group[i]->print();
-		cout << delimiter << endl;
-	} 
-	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
-	{
-		delete group[i];
-	}
+	print(group, sizeof(group) / sizeof(group[0]));
+	clear(group, sizeof(group) / sizeof(group[0]));
 }
