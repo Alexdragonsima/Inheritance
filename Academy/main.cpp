@@ -1,5 +1,7 @@
 #include<iostream>
-#include<string>
+#include<fstream>
+#include<string>		//обьявлен класс std::string
+#include<string.h>		//обьявлены функции для работы с NULL Terminatef Lines
 using namespace std;
 
 #define delimiter "\n---------------------------\n"
@@ -9,6 +11,10 @@ using namespace std;
 
 class Human
 {
+	static const int TYPE_NAME_WIDTH = 12;
+	static const int FIRST_NAME_WIDTH = 15;
+	static const int LAST_NAME_WIDTH = 15;
+	static const int AGE_WIDTH = 5;
 	std::string last_name;
 	std::string first_name;
 	int age;
@@ -54,7 +60,24 @@ public:
 	//				methods:
 	virtual std::ostream& print(std::ostream& os)const
 	{
+		//os << strchr(typeid(*this).name(), ' ') + 1 << ":\t";			//оператор typeid(type|value) определяет тип значения на этопе выполнения программы
+														//метод name() возвращает c_str() содержащую имя типа 
 		return os << last_name << " " << first_name << " " << age;
+	}
+	virtual std::ofstream& print(std::ofstream& ofs)const
+	{
+		ofs.width(TYPE_NAME_WIDTH);	//задает ширину вывода
+						//при первом вызове метод width() велючает выравнивание по правому краю.
+		ofs << std::left;	// возвращаем выравнивание по левому краю
+						// один вызав width влияет на одно значение
+		ofs << std::string(strchr(typeid(*this).name(), ' ') + 1) + ":";
+		ofs.width(LAST_NAME_WIDTH);
+		ofs << last_name;
+		ofs.width(FIRST_NAME_WIDTH);
+		ofs << first_name;
+		ofs.width(AGE_WIDTH);
+		ofs << age;
+		return ofs;
 	}
 };
 
@@ -62,12 +85,20 @@ std::ostream& operator<<(std::ostream& os, const Human& obj)
 {
 	return obj.print(os);
 }
+std::ofstream& operator<<(std::ofstream& ofs, const Human& obj)\
+{
+	return obj.print(ofs);
+}
 
 #define STUDENTS_TAKE_PARAMETERS  const std::string& speciality, const std::string& group, double rating, double attendance
 #define STUDENTS_GIVE_PARAMETERS  speciality, group, rating, attendance
 
 class Student : public Human
 {
+	const static int SPECIALITY_WIDTH = 25;
+	const static int GROUP_WIDTH      = 8;
+	const static int RATING_WIDTH     = 8;
+	const static int ATTENDANCE_WIDTH = 8;
 	std::string speciality;
 	std::string group;
 	double rating;
@@ -134,7 +165,20 @@ public:
 
 	std::ostream& print(std::ostream& os)const override
 	{
-		return Human::print(os) <<" "<< speciality << " " << group << " " << rating << " " << attendance << endl;
+		return Human::print(os) <<" "<< speciality << " " << group << " " << rating << " " << attendance;
+	}
+	std::ofstream& print(std::ofstream& ofs)const override
+	{
+		Human::print(ofs);
+		ofs.width(SPECIALITY_WIDTH);
+		ofs << speciality;
+		ofs.width(GROUP_WIDTH);
+		ofs << group;
+		ofs.width(RATING_WIDTH);
+		ofs << rating;
+		ofs.width(ATTENDANCE_WIDTH);
+		ofs << attendance;
+		return ofs;
 	}
 };
 
@@ -143,6 +187,8 @@ public:
 
 class Teacher :public Human
 {
+	const static int SPECIALITY_WIDTH = 25;
+	const static int EXPERIENCE_WIDTH = 5;
 	std::string speciality;
 	int experience;
 public:
@@ -181,6 +227,15 @@ public:
 	std::ostream& print(std::ostream& os)const override
 	{
 		return Human::print(os)<<" "<< speciality << " " << experience << " years";
+	}
+	std::ofstream& print(std::ofstream& ofs)const override
+	{
+		Human::print(ofs);
+		ofs.width(SPECIALITY_WIDTH);
+		ofs << speciality;
+		ofs.width(EXPERIENCE_WIDTH);
+		ofs << experience;
+		return ofs;
 	}
 };
 
@@ -233,7 +288,18 @@ void print(Human* group[], const int n)
 		cout << delimiter << endl;
 	}
 }
-
+void Save(Human* group[], const int n, const std::string& filename)
+{
+	std::ofstream fout(filename);
+	for (int i = 0; i < n; i++)
+	{
+		fout << *group[i] << endl;
+	}
+	fout.close();
+	std::string cmd = "notepad "+filename;
+	system(cmd.c_str());			//функция system(const char*)выполняет лубую доступную команду операционной системы
+									//метод c_str() возвращает C-string (NULL Terminated line) обернутый в обьект класса std::string
+}
 void clear(Human* group[], const int n)
 {
 	for (int i = 0; i < n; i++)
@@ -298,12 +364,13 @@ void main()
 
 	Human* group[] =
 	{
-		new Student (" Pinkman", " Jessie ",20, "Chemistry", " WW_220", 95, 90),
-		new Teacher (" White", "   Walter ",50, "Chemistry", 25),
-		new Graduate(" Schrider", "Hank   ",40, "Criminalistic", "OBN", 50, 70, "How to catch Heisenberg"),
-		new Student (" Vercetti", "Tommy  ",30, "Thieft","Vice",95,98),
-		new Teacher (" Diaz", "    Ricardo",50, "Weapons distribution",20)
+		new Student ("Pinkman", "Jessie", 20, "Chemistry", "WW_220", 95, 90),
+		new Teacher ("White", "Walter",50, "Chemistry", 25),
+		new Graduate("Schrider", "Hank",40, "Criminalistic", "OBN", 50, 70, "How to catch Heisenberg"),
+		new Student ("Vercetti", "Tommy",30, "Thieft","Vice",95,98),
+		new Teacher ("Diaz", "Ricardo",50, "Weapons distribution",20)
 	};
 	print(group, sizeof(group) / sizeof(group[0]));
+	Save(group, sizeof(group) / sizeof(group[0]),"group.txt");
 	clear(group, sizeof(group) / sizeof(group[0]));
 }
