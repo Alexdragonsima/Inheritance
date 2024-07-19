@@ -300,6 +300,56 @@ void Save(Human* group[], const int n, const std::string& filename)
 	system(cmd.c_str());			//функция system(const char*)выполняет лубую доступную команду операционной системы
 									//метод c_str() возвращает C-string (NULL Terminated line) обернутый в обьект класса std::string
 }
+Human** Load(const std::string& filename, int& n)
+{
+	Human** group = nullptr;
+	std::ifstream fin(filename);
+	if (fin.is_open())
+	{
+		//1) Вычисляем размер файла 
+		n = 0;
+		while (!fin.eof())
+		{
+			std::string buffer;
+			//fin.getline(); // не перегружен для стд стринг
+			std::getline(fin, buffer);	//читаает все до конца строки
+			//move DST, SRC;
+			//strcat(DST, SRC);
+			if (
+				buffer.find("Human:")== std::string::npos &&
+				buffer.find("Student:")== std::string::npos &&
+				buffer.find("Teacher:")== std::string::npos &&
+				buffer.find("Graduate:")== std::string::npos
+				)continue;
+			n++;
+		}
+		cout << "Колво записей в файле: " << n << endl;
+
+		//2) выделяем память для группы 
+		group = new Human * [n] {};
+
+		//3) возвращаемся в начало файла для того что бы  прочитать содержимое этого файла
+		cout << "Позиция курсора на чтение: " << fin.tellg() << endl;
+		fin.clear();
+		fin.seekg(0);
+		cout << "Позиция курсора на чтение: " << fin.tellg() << endl;
+
+		//4) читаем файл
+		for (int i = 0; !fin.eof(); i++)
+		{
+			std::string type;
+			fin >> type;
+			
+		}
+
+		fin.close();
+	}
+	else
+	{
+		std::cerr << "Error:file not found" << endl;
+	}
+	return group;
+}
 void clear(Human* group[], const int n)
 {
 	for (int i = 0; i < n; i++)
@@ -310,8 +360,9 @@ void clear(Human* group[], const int n)
 
 //#define INHERITANCE_1
 //#define INHERITANCE_2
-
-#define POLYMORPHISM
+//#define SAVE_CHECK
+#define LOAD_CHECK
+//#define POLYMORPHISM
 
 void main()
 {
@@ -362,15 +413,19 @@ void main()
 	//        VFPTR-Virtual Functions Pointers
 
 
+#ifdef SAVE_CHECK
 	Human* group[] =
 	{
-		new Student ("Pinkman", "Jessie", 20, "Chemistry", "WW_220", 95, 90),
-		new Teacher ("White", "Walter",50, "Chemistry", 25),
+		new Student("Pinkman", "Jessie", 20, "Chemistry", "WW_220", 95, 90),
+		new Teacher("White", "Walter",50, "Chemistry", 25),
 		new Graduate("Schrider", "Hank",40, "Criminalistic", "OBN", 50, 70, "How to catch Heisenberg"),
-		new Student ("Vercetti", "Tommy",30, "Thieft","Vice",95,98),
-		new Teacher ("Diaz", "Ricardo",50, "Weapons distribution",20)
+		new Student("Vercetti", "Tommy",30, "Thieft","Vice",95,98),
+		new Teacher("Diaz", "Ricardo",50, "Weapons distribution",20)
 	};
 	print(group, sizeof(group) / sizeof(group[0]));
-	Save(group, sizeof(group) / sizeof(group[0]),"group.txt");
+	Save(group, sizeof(group) / sizeof(group[0]), "group.txt");
 	clear(group, sizeof(group) / sizeof(group[0]));
+#endif // SAVE_CHECK
+	int n = 0;
+	Human** group = Load("group.txt", n);
 }
