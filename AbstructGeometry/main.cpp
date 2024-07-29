@@ -13,14 +13,14 @@ enum (Enumerotor - Перечисление)- это набор именнова
 	{
 		//CMYK
 		//RGB:
-		RED             = 0x000000FF,
-		GREEN           = 0x0000FF00,
-		BLUE            = 0x00FF0000,
-		YELLOW          = 0X0000FFFF,
+		RED = 0x000000FF,
+		GREEN = 0x0000FF00,
+		BLUE = 0x00FF0000,
+		YELLOW = 0X0000FFFF,
 
-		CONSOLE_RED     = 0xCC,	//старшая 'C' - цвет фона,младшая цвет текста
-		CONSOLE_GREEN   = 0xAA,
-		CONSOLE_BLUE    = 0x99,
+		CONSOLE_RED = 0xCC,	//старшая 'C' - цвет фона,младшая цвет текста
+		CONSOLE_GREEN = 0xAA,
+		CONSOLE_BLUE = 0x99,
 		CONSOLE_DEFAULT = 0x07
 	};
 #define SHAPE_TAKE_PARAMETERS unsigned int start_x, unsigned int start_y, unsigned int line_width, Color color
@@ -32,21 +32,38 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		unsigned int start_y;
 		unsigned int line_width;
 		Color color;
+		static const int MIN_START_X = 100;
+		static const int MIN_START_Y = 50;
+		static const int MAX_START_X = 1000;
+		static const int MAX_START_Y = 500;
+		static const int MIN_LINE_WIDTH = 1;
+		static const int MAX_LINE_WIDTH = 32;
+		static const int MIN_SIZE = 50;
+		static const int MAX_SIZE = 500;
+		static int count;
 	public:
 		//чисто виртуальные функции
 		virtual double get_area()const = 0;
 		virtual double get_perimeter()const = 0;
 		virtual void draw()const = 0;
 		////////////////////////////
-		Shape(SHAPE_TAKE_PARAMETERS) :color(color) 
+		Shape(SHAPE_TAKE_PARAMETERS) :color(color)
 		{
 			set_start_x(start_x);
 			set_start_y(start_y);
 			set_line_width(line_width);
+			count++;
 		}
-		virtual ~Shape() {}
+		virtual ~Shape()
+		{
+			count--;
+		}
 
 		//     encapsulatoin: 
+		int get_count()const
+		{
+			return count;
+		}
 		unsigned int get_start_x()const
 		{
 			return start_x;
@@ -61,19 +78,33 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		}
 		void set_start_x(unsigned int start_x)
 		{
+			if (start_x < MIN_START_X)start_x = MIN_START_X;
+			if (start_x > MAX_START_X)start_x = MAX_START_X;
 			this->start_x = start_x;
 		}
 		void set_start_y(unsigned int start_y)
 		{
+			if (start_y < MIN_START_Y)start_y = MIN_START_Y;
+			if (start_y > MAX_START_Y)start_y = MAX_START_Y;
 			this->start_y = start_y;
 		}
 		void set_line_width(unsigned int line_width)
 		{
-			this->line_width = line_width;
+			this->line_width =
+				line_width < MIN_LINE_WIDTH ? MIN_LINE_WIDTH :
+				line_width > MAX_LINE_WIDTH ? MAX_LINE_WIDTH :
+				line_width;
+		}
+
+		int filter_size(int size)const
+		{
+			return
+				size < MIN_SIZE ? MIN_SIZE :
+				size > MAX_SIZE ? MAX_SIZE :
+				size;
 		}
 
 		// methods:
-
 
 		virtual void info()const
 		{
@@ -83,7 +114,9 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		}
 	};
 
-    /*class Square :public Shape
+	int Shape::count = 0;
+
+	/*class Square :public Shape
 	{
 		double side;
 	public:
@@ -136,7 +169,7 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		double width;	//ширина прямоугольника
 		double height;	//высота прямоугольника
 	public:
-		Rectangle(double width, double height,SHAPE_TAKE_PARAMETERS) :Shape(SHAPE_GIVE_PARAMETERS)
+		Rectangle(double width, double height, SHAPE_TAKE_PARAMETERS) :Shape(SHAPE_GIVE_PARAMETERS)
 		{
 			set_width(width);
 			set_height(height);
@@ -144,11 +177,11 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		~Rectangle() {}
 		void set_width(double width)
 		{
-			this->width = width;
+			this->width = filter_size(width);
 		}
 		void set_height(double height)
 		{
-			this->height = height;
+			this->height = filter_size(height);
 		}
 		double get_width()const
 		{
@@ -186,7 +219,7 @@ enum (Enumerotor - Перечисление)- это набор именнова
 			SelectObject(hdc, hBrush);
 
 			//5)рисуем фигуру
-			::Rectangle(hdc, start_x, start_y, start_x+width, start_y+height);	//:: - global scope
+			::Rectangle(hdc, start_x, start_y, start_x + width, start_y + height);	//:: - global scope
 
 			//6)hdc, hPen, hBrush - занимают ресурсы ,и после того как мы ими воспользовались ресурс нужно освабодить
 			DeleteObject(hBrush);
@@ -206,7 +239,7 @@ enum (Enumerotor - Перечисление)- это набор именнова
 	class Square :public Rectangle
 	{
 	public:
-		Square(double side, SHAPE_TAKE_PARAMETERS) :Rectangle(side,side,SHAPE_GIVE_PARAMETERS) {}
+		Square(double side, SHAPE_TAKE_PARAMETERS) :Rectangle(side, side, SHAPE_GIVE_PARAMETERS) {}
 		~Square() {}
 	};
 
@@ -214,14 +247,14 @@ enum (Enumerotor - Перечисление)- это набор именнова
 	{
 		double radius;
 	public:
-		Circle(double radius, SHAPE_TAKE_PARAMETERS) :Shape(SHAPE_GIVE_PARAMETERS) 
+		Circle(double radius, SHAPE_TAKE_PARAMETERS) :Shape(SHAPE_GIVE_PARAMETERS)
 		{
 			set_radius(radius);
 		}
 		~Circle() {}
 		void set_radius(double radius)
 		{
-			this->radius = radius;
+			this->radius = filter_size(radius);
 		}
 		double get_radius()const
 		{
@@ -243,10 +276,10 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		{
 			HWND hwnd = FindWindow(NULL, L"Inheritance - Microsoft Visual Studio");
 			HDC hdc = GetDC(hwnd);
-			
+
 			HPEN hPen = CreatePen(PS_SOLID, 5, color);
 			HBRUSH hBrush = CreateSolidBrush(color);
-			
+
 			SelectObject(hdc, hPen);
 			SelectObject(hdc, hBrush);
 
@@ -255,7 +288,7 @@ enum (Enumerotor - Перечисление)- это набор именнова
 			//очищаем ресурсы
 			DeleteObject(hBrush);
 			DeleteObject(hPen);
-			
+
 			ReleaseDC(hwnd, hdc);
 		}
 		void info()const override
@@ -266,22 +299,37 @@ enum (Enumerotor - Перечисление)- это набор именнова
 			Shape::info();
 		}
 	};
+
+	/*class Triangle :public Shape
+	{
+	public:
+		virtual double get_height()const = 0;
+		Triangle(SHAPE_TAKE_PARAMETERS) :Shape(SHAPE_GIVE_PARAMETERS) {}
+		~Triangle() {}
+		void info()const override
+		{
+			cout << "Высота треугольника: " << get_height << endl;
+			Shape::info();
+		}
+	};*/
 }
 
 void main()
 {
 	setlocale(LC_ALL, "");
 	//Shape shape(Color::CONSOLE_RED);
-	Geometry::Square square(5,100,100,5,Geometry:: Color::RED);
+	Geometry::Square square(5, 100, 100, 5, Geometry::Color::RED);
 	/*cout << "Длина стороны: " << square.get_side() << endl;
 	cout << "Площадь квадрата: " << square.get_area() << endl;
 	cout << "Периметр квадрата: " << square.get_perimeter() << endl;
 	square.draw();*/
 	square.info();
 
-	Geometry::Rectangle rect(100, 50,200,100,10,Geometry:: Color::BLUE);
+	Geometry::Rectangle rect(500, 300, 200, 100, 1, Geometry::Color::BLUE);
 	rect.info();
 
-	Geometry::Circle disk(1000,500,100,5, Geometry::Color::YELLOW);
+	Geometry::Circle disk(200, 800, 100, 5, Geometry::Color::YELLOW);
 	disk.info();
+
+	cout << "Количество фигур: " << disk.get_count() << endl;
 }
