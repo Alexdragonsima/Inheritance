@@ -33,6 +33,10 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		unsigned int start_y;
 		unsigned int line_width;
 		Color color;
+		HDC hdc;
+		HPEN hPen;
+		HBRUSH hBrush;
+
 		static const int MIN_START_X = 100;
 		static const int MIN_START_Y = 50;
 		static const int MAX_START_X = 1000;
@@ -48,16 +52,41 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		virtual double get_perimeter()const = 0;
 		virtual void draw()const = 0;
 		////////////////////////////
+
+		void hdc_init()
+		{
+			//WinGDI - Windows Graphics Device Interface
+		//1)получаем окно консоли
+		//HWND hwnd = GetConsoleWindow();	// получает окно консоли
+			HWND hwnd = FindWindow(NULL, L"Inheritance - Microsoft Visual Studio");
+			//2)Для того чтобы рисовать  нужен контекст устройства который есть у каждого окна.контекст устройства можно получить при помощи GetDC()
+			HDC hdc = GetDC(hwnd);	//получаем контекст окна консоли
+			//контекст устройства это то на чем мы будем рисовать
+
+			//3)Теперь нам нужно то ,чем мы будем рисовать
+			HPEN hPen = CreatePen(PS_SOLID, line_width, color);	//hPen - рисует контур фигуры
+			//sp_solid - сплошная линия
+			HBRUSH hBrush = CreateSolidBrush(color);	//hbrush - рисует заливку фигуры
+
+			//4)Выбираем чем и на че мы будем рисовать
+			SelectObject(hdc, hPen);
+			SelectObject(hdc, hBrush);
+		}
+
 		Shape(SHAPE_TAKE_PARAMETERS) :color(color)
 		{
 			set_start_x(start_x);
 			set_start_y(start_y);
 			set_line_width(line_width);
+			hdc_init();
 			count++;
 		}
 		virtual ~Shape()
 		{
 			count--;
+			if (hPen)DeleteObject(hPen);
+			if (hBrush)DeleteObject(hBrush);
+			if (hdc)ReleaseDC(FindWindow(NULL, L"Inheritance - Microsoft Visual Studio"),hdc);
 		}
 
 		//     encapsulatoin: 
@@ -104,6 +133,7 @@ enum (Enumerotor - Перечисление)- это набор именнова
 				size > MAX_SIZE ? MAX_SIZE :
 				size;
 		}
+
 
 		// methods:
 
@@ -202,7 +232,8 @@ enum (Enumerotor - Перечисление)- это набор именнова
 		}
 		void draw()const override
 		{
-			//WinGDI - Windows Graphics Device Interface
+			::Rectangle(hdc, start_x, start_y, start_x + width, start_y + height);
+			/*//WinGDI - Windows Graphics Device Interface
 			//1)получаем окно консоли
 			//HWND hwnd = GetConsoleWindow();	// получает окно консоли
 			HWND hwnd = FindWindow(NULL, L"Inheritance - Microsoft Visual Studio");
@@ -226,7 +257,7 @@ enum (Enumerotor - Перечисление)- это набор именнова
 			DeleteObject(hBrush);
 			DeleteObject(hPen);
 
-			ReleaseDC(hwnd, hdc);
+			ReleaseDC(hwnd, hdc);*/
 		}
 		void info()const override
 		{
